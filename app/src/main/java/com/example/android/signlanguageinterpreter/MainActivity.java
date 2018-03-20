@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     private StringBuilder sb = new StringBuilder();
-
+    private boolean connectStatus;
 
     private ConnectedThread mConnectedThread;
 
@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        connectStatus=false;
         setContentView(R.layout.activity_main);
         btClick=(TextView)findViewById(R.id.btClick);
 
@@ -83,18 +83,20 @@ public class MainActivity extends Activity {
         btClick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!connectStatus){
                 if(startBluetooth()){
                     bluetoothStatus.setText("Connected");
 
                 }else{
-                    bluetoothStatus.setText("DisConnected");
-                }
+                    bluetoothStatus.setText("Disconnected");
+                }}
             }
         });
     }
 
     private boolean startBluetooth() {
         boolean status=false;
+        connectStatus=true;
         // Set up a pointer to the remote node using it's address.
         BluetoothDevice device = btAdapter.getRemoteDevice(address);
 
@@ -171,52 +173,6 @@ public class MainActivity extends Activity {
         return  device.createRfcommSocketToServiceRecord(MY_UUID);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        Log.d(TAG, "...onResume - try connect...");
-
-        // Set up a pointer to the remote node using it's address.
-        BluetoothDevice device = btAdapter.getRemoteDevice(address);
-        bluetoothStatus.setText("Disconnected");
-
-        // Two things are needed to make a connection:
-        //   A MAC address, which we got above.
-        //   A Service ID or UUID.  In this case we are using the
-        //     UUID for SPP.
-
-        try {
-            btSocket = createBluetoothSocket(device);
-        } catch (IOException e) {
-            errorExit("Fatal Error", "In onResume() and socket create failed: " + e.getMessage() + ".");
-        }
-
-        // Discovery is resource intensive.  Make sure it isn't going on
-        // when you attempt to connect and pass your message.
-        btAdapter.cancelDiscovery();
-
-        // Establish the connection.  This will block until it connects.
-        Log.d(TAG, "...Connecting...");
-        try {
-            btSocket.connect();
-            bluetoothStatus.setText("Connected");
-            Log.d(TAG, "....Connection ok...");
-        } catch (IOException e) {
-            try {
-                btSocket.close();
-                bluetoothStatus.setText("Disconnected");
-            } catch (IOException e2) {
-                errorExit("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
-            }
-        }
-
-        // Create a data stream so we can talk to server.
-        Log.d(TAG, "...Create Socket...");
-
-        mConnectedThread = new ConnectedThread(btSocket);
-        mConnectedThread.start();
-    }
 
     @Override
     public void onPause() {
@@ -225,9 +181,9 @@ public class MainActivity extends Activity {
         Log.d(TAG, "...In onPause()...");
 
         try     {
-
+            connectStatus=false;
             btSocket.close();
-            bluetoothStatus.setText("DisConnected");
+            bluetoothStatus.setText("Disconnected");
         } catch (IOException e2) {
             errorExit("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
         }
