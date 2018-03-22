@@ -83,12 +83,12 @@ public class MainActivity extends Activity {
         btClick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!connectStatus){
-                if(startBluetooth()){
-                    bluetoothStatus.setText("Connected");
+                if(!connectStatus){                             //if connection  process is not started
+                if(startBluetooth()){                           //if bluetooth connected succesfully
+                    bluetoothStatus.setText(R.string.btConnected);
 
                 }else{
-                    bluetoothStatus.setText("Disconnected");
+                    bluetoothStatus.setText(R.string.btDisconnected);
                 }}
             }
         });
@@ -120,14 +120,14 @@ public class MainActivity extends Activity {
         Log.d(TAG, "...Connecting...");
         try {
             btSocket.connect();
-            bluetoothStatus.setText("Connected");
+            bluetoothStatus.setText(R.string.btConnected);
             Log.d(TAG, "....Connection ok...");
             status = true;
         } catch (IOException e) {
             try {
                 btSocket.close();
                 status=false;
-                bluetoothStatus.setText("Disconnected");
+                bluetoothStatus.setText(R.string.btDisconnected);
             } catch (IOException e2) {
                 errorExit("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
             }
@@ -183,7 +183,7 @@ public class MainActivity extends Activity {
         try     {
             connectStatus=false;
             btSocket.close();
-            bluetoothStatus.setText("Disconnected");
+            bluetoothStatus.setText(R.string.btDisconnected);
         } catch (IOException e2) {
             errorExit("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
         }

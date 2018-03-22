@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Sign Language Interpreter</string>
+    <string name="btConnected">Connected</string>
+    <string name="btDisconnected">Disconnected</string>
+    <string name="impLow">Low</string>
+    <string name="impMedium">Moderate</string>
+    <string name="impUrgent">Urgent</string>
+
 </resources>
