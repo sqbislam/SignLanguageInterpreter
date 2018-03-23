@@ -46,8 +46,6 @@ public class Interpreter {
         return s;
         }
 
-
-
     private void checkData(int[] data) {
         prevData= getArray(prevDataraw[0]);
         Log.d(TAG, "checkData: current"+ Arrays.toString(data));
@@ -63,10 +61,6 @@ public class Interpreter {
             }
 
         }
-
-
-
-
 
     private String getStringfromDB(int[] counter) {
         int num = convertArrtoNum(counter);
@@ -89,11 +83,9 @@ public class Interpreter {
         return output;
     }
 
-
     private void reset() {
             counter = new int[4];
     }
-
 
     private int convertArrtoNum(int[] counter) {
 

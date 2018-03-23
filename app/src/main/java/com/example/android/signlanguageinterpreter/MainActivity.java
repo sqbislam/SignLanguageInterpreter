@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,12 +32,14 @@ public class MainActivity extends Activity {
     TextView bluetoothStatus;
     TextView btClick;
     Interpreter interpreter;
+    ImageButton fetchBtn;
+
 
     final int RECIEVE_MESSAGE = 1;        // Status  for Handler
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     private StringBuilder sb = new StringBuilder();
-    private boolean connectStatus;
+    private boolean connectStatus;       // Status for Bluetooth connection running or not
 
     private ConnectedThread mConnectedThread;
 
@@ -54,38 +57,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         interpreter= new Interpreter();
         btClick=(TextView)findViewById(R.id.btClick);
-
-        //btnOn = (Button) findViewById(R.id.buttonOn);                  // button LED ON
-        //btnOff = (Button) findViewById(R.id.buttonOff);                // button LED OFF
         txtArduino = (TextView) findViewById(R.id.textView);      // for display the received data from the Arduino
-        bluetoothStatus= (TextView)findViewById(R.id.btStatusImg);
+        bluetoothStatus= (TextView)findViewById(R.id.btStatusImg); //for diplaying BT Status
+        fetchBtn = (ImageButton) findViewById(R.id.fetchBtn);      // button to start fetching data
 
-
-        h = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                switch (msg.what) {
-                    case RECIEVE_MESSAGE:                                                   // if receive massage
-                        byte[] readBuf = (byte[]) msg.obj;
-                        String strIncom = new String(readBuf, 0, msg.arg1);                 // create string from bytes array
-                        sb.append(strIncom);                                                // append string
-                        int endOfLineIndex = sb.indexOf("\r\n");                            // determine the end-of-line
-                        if (endOfLineIndex > 0) {                                            // if end-of-line,
-                            String sbprint = sb.substring(0, endOfLineIndex);               // extract string
-                            sb.delete(0, sb.length());                                      // and clear
-                            sbprint=readData(sbprint);
-                            String s= interpreter.getString(sbprint);
-                            Log.d(TAG, "handleMessage: counter"+ Arrays.toString(interpreter.counter));
-                            Log.d(TAG, "handleMessage: prevData"+ Arrays.toString(interpreter.prevData));
-
-                            txtArduino.setText("Data from Arduino: " + sbprint +"Message :"+s);            // update TextView
-                           // btnOff.setEnabled(true);
-                           // btnOn.setEnabled(true);
-                        }
-                        //Log.d(TAG, "...String:"+ sb.toString() +  "Byte:" + msg.arg1 + "...");
-                        break;
-                }
-            };
-        };
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
         checkBTState();
@@ -101,8 +76,21 @@ public class MainActivity extends Activity {
                 }}
             }
         });
+
+        fetchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+
+            public void onClick(View view) {
+
+               if(connectStatus) {
+                   fetchData();
+               }
+            }
+        });
     }
 
+
+    // verifies bluetooth adapter and starts bluetooth connection with device
     private boolean startBluetooth() {
         boolean status=false;
         connectStatus=true;
@@ -145,31 +133,11 @@ public class MainActivity extends Activity {
         // Create a data stream so we can talk to server.
         Log.d(TAG, "...Create Socket...");
 
-        mConnectedThread = new ConnectedThread(btSocket);
-        mConnectedThread.start();
+
         return status;
     }
 
-
-
-
-        /*        btnOn.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                btnOn.setEnabled(false);
-                mConnectedThread.write("1");    // Send "1" via Bluetooth
-                //Toast.makeText(getBaseContext(), "Turn on LED", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnOff.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                btnOff.setEnabled(false);
-                mConnectedThread.write("0");    // Send "0" via Bluetooth
-                //Toast.makeText(getBaseContext(), "Turn off LED", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }*/
-
+    //Creates bluetooth Socket
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         if(Build.VERSION.SDK_INT >= 10){
             try {
@@ -198,6 +166,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    //Check bluetooth state and requests to turn on BT if its off
     private void checkBTState() {
         // Check for Bluetooth support and then check to make sure it is turned on
         // Emulator doesn't support Bluetooth and will return null
@@ -214,11 +183,13 @@ public class MainActivity extends Activity {
         }
     }
 
+    //error message for exit
     private void errorExit(String title, String message){
         Toast.makeText(getBaseContext(), title + " - " + message, Toast.LENGTH_LONG).show();
         finish();
     }
 
+    //Parallel thread to establish input and output streams and recieve data from arduino
     private class ConnectedThread extends Thread {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
@@ -266,8 +237,41 @@ public class MainActivity extends Activity {
         }
     }
 
+    //method to read data and fetch string according to gestures
     public String readData(String data){
 
     return data;
     }
+
+    //To start fetching data from Arduino
+    private void fetchData(){
+        h = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                switch (msg.what) {
+                    case RECIEVE_MESSAGE:                                                   // if receive massage
+                        byte[] readBuf = (byte[]) msg.obj;
+                        String strIncom = new String(readBuf, 0, msg.arg1);                 // create string from bytes array
+                        sb.append(strIncom);                                                // append string
+                        int endOfLineIndex = sb.indexOf("\r\n");                            // determine the end-of-line
+                        if (endOfLineIndex > 0) {                                            // if end-of-line,
+                            String sbprint = sb.substring(0, endOfLineIndex);               // extract string
+                            sb.delete(0, sb.length());                                      // and clear
+                            sbprint=readData(sbprint);
+                            String s= interpreter.getString(sbprint);
+                            Log.d(TAG, "handleMessage: counter"+ Arrays.toString(interpreter.counter));
+                            Log.d(TAG, "handleMessage: prevData"+ Arrays.toString(interpreter.prevData));
+
+                            txtArduino.setText("Data from Arduino: " + sbprint +"\n Message :"+s);            // update TextView
+                            // btnOff.setEnabled(true);
+                            // btnOn.setEnabled(true);
+                        }
+                        //Log.d(TAG, "...String:"+ sb.toString() +  "Byte:" + msg.arg1 + "...");
+                        break;
+                }
+            };
+        };
+        mConnectedThread = new ConnectedThread(btSocket);
+        mConnectedThread.start();
+    }
+
 }
