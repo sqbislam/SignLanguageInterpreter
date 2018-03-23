@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class MainActivity extends Activity {
@@ -29,6 +30,7 @@ public class MainActivity extends Activity {
     Handler h;
     TextView bluetoothStatus;
     TextView btClick;
+    Interpreter interpreter;
 
     final int RECIEVE_MESSAGE = 1;        // Status  for Handler
     private BluetoothAdapter btAdapter = null;
@@ -50,12 +52,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         connectStatus=false;
         setContentView(R.layout.activity_main);
+        interpreter= new Interpreter();
         btClick=(TextView)findViewById(R.id.btClick);
 
         //btnOn = (Button) findViewById(R.id.buttonOn);                  // button LED ON
         //btnOff = (Button) findViewById(R.id.buttonOff);                // button LED OFF
         txtArduino = (TextView) findViewById(R.id.textView);      // for display the received data from the Arduino
         bluetoothStatus= (TextView)findViewById(R.id.btStatusImg);
+
+
         h = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 switch (msg.what) {
@@ -68,7 +73,11 @@ public class MainActivity extends Activity {
                             String sbprint = sb.substring(0, endOfLineIndex);               // extract string
                             sb.delete(0, sb.length());                                      // and clear
                             sbprint=readData(sbprint);
-                            txtArduino.setText("Data from Arduino: " + sbprint);            // update TextView
+                            String s= interpreter.getString(sbprint);
+                            Log.d(TAG, "handleMessage: counter"+ Arrays.toString(interpreter.counter));
+                            Log.d(TAG, "handleMessage: prevData"+ Arrays.toString(interpreter.prevData));
+
+                            txtArduino.setText("Data from Arduino: " + sbprint +"Message :"+s);            // update TextView
                            // btnOff.setEnabled(true);
                            // btnOn.setEnabled(true);
                         }
@@ -258,14 +267,7 @@ public class MainActivity extends Activity {
     }
 
     public String readData(String data){
-        String out="";
-    int val= Integer.parseInt(data);
-    if(val>500){
-        out= "Value is greater than 500 :"+val;
-    }
-    if(val<500){
-        out= "Value is less than 500: "+val;
-    }
-    return out;
+
+    return data;
     }
 }
